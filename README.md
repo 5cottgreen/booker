@@ -1,0 +1,2 @@
+# booker
+booker is an implementation of notepad on the command line. At some point I realized that I was experiencing some pleasure from using the command line, in particular when pushinging another commit. So in case to inprove my daily productivity, I decided to create a task list using the command line instead of a regular text file.
