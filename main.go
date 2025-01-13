@@ -105,7 +105,8 @@ func main() {
 					tasks := bytes.Split(content, nsep)
 
 					for _, task := range tasks {
-						if string(bytes.SplitN(task, sep, 2)[0]) == id {
+						arg := string(bytes.SplitN(task, sep, 2)[0])
+						if arg == id || arg == "" {
 							continue
 						}
 
