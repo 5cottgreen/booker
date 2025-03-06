@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 )
@@ -38,11 +39,12 @@ func main() {
 				Name:  "task",
 				Usage: "Creates task.",
 				Action: func(ctx context.Context, c *cli.Command) error {
-					if c.Args().Len() < 1 {
-						return errors.New("must have at least one symbol")
+					if c.Args().Len() < 2 {
+						return errors.New("must have category name and task description")
 					}
 
-					tasksFile, err := os.OpenFile("tasks.txt", os.O_CREATE|os.O_APPEND, 0666)
+					os.Mkdir("tasks", os.ModeDir)
+					tasksFile, err := os.OpenFile("tasks/"+c.Args().First()+".txt", os.O_CREATE|os.O_APPEND, 0666)
 					if err != nil {
 						return err
 					}
@@ -54,7 +56,7 @@ func main() {
 						return err
 					}
 
-					tasksFile.Write([]byte(id + " " + c.Args().Slice()[0] + "\n"))
+					tasksFile.Write([]byte(id + " " + c.Args().Slice()[1] + "\n"))
 					fmt.Printf("task %s created\n", id)
 					return nil
 				},
@@ -64,13 +66,13 @@ func main() {
 				Name:  "done",
 				Usage: "Romoves task.",
 				Action: func(ctx context.Context, c *cli.Command) error {
-					if c.Args().Len() < 1 {
-						return errors.New("must have at least one symbol")
+					if c.Args().Len() < 2 {
+						return errors.New("must have category name and task id")
 					}
 
-					id := c.Args().Slice()[0]
+					id := c.Args().Slice()[1]
 					if id == "*" {
-						if err := os.Remove("tasks.txt"); err != nil {
+						if err := os.Remove("tasks/" + c.Args().First() + ".txt"); err != nil {
 							return err
 						}
 
@@ -78,7 +80,7 @@ func main() {
 						return nil
 					}
 
-					tasksFile, err := os.Open("tasks.txt")
+					tasksFile, err := os.Open("tasks/" + c.Args().First() + ".txt")
 					if err != nil {
 						return err
 					}
@@ -89,20 +91,28 @@ func main() {
 					}
 
 					tasksFile.Close()
-					if err := os.Remove("tasks.txt"); err != nil {
+					if err := os.Remove("tasks/" + c.Args().First() + ".txt"); err != nil {
 						return err
 					}
 
-					tasksFile, err = os.Create("tasks.txt")
+					sep := []byte(" ")
+					nsep := []byte("\n")
+					tasks := bytes.Split(content, nsep)
+
+					if len(tasks) == 2 {
+						arg := string(bytes.SplitN(tasks[0], sep, 2)[0])
+						if arg == id || arg == "" {
+							fmt.Printf("task %s removed\n", id)
+							return nil
+						}
+					}
+
+					tasksFile, err = os.Create("tasks/" + c.Args().First() + ".txt")
 					if err != nil {
 						return err
 					}
 
 					defer tasksFile.Close()
-
-					sep := []byte(" ")
-					nsep := []byte("\n")
-					tasks := bytes.Split(content, nsep)
 
 					for _, task := range tasks {
 						arg := string(bytes.SplitN(task, sep, 2)[0])
@@ -128,25 +138,25 @@ func main() {
 				Name:  "list",
 				Usage: "Lists tasks.",
 				Action: func(ctx context.Context, c *cli.Command) error {
-					tasksFile, err := os.Open("tasks.txt")
-					if err != nil {
-						return err
+					if c.Args().Len() > 0 {
+						listTasks("tasks/" + c.Args().First() + ".txt")
+						fmt.Println("linsting complete")
+						return nil
+					} else {
+						items, err := os.ReadDir("tasks")
+						if err != nil {
+							fmt.Println("linsting complete")
+							return nil
+						}
+
+						for _, item := range items {
+							fmt.Println("|-" + strings.Split(item.Name(), ".")[0])
+							listTasks("tasks/" + item.Name())
+						}
+
+						fmt.Println("linsting complete")
+						return nil
 					}
-
-					defer tasksFile.Close()
-
-					content, err := io.ReadAll(tasksFile)
-					if err != nil {
-						return err
-					}
-
-					tasks := bytes.Split(content, []byte("\n"))
-					for _, task := range tasks {
-						fmt.Println(string(task))
-					}
-
-					fmt.Println("linsting complete")
-					return nil
 				},
 			},
 		},
@@ -167,4 +177,26 @@ func generateId() (id string, err error) {
 	}
 
 	return fmt.Sprintf("%x", b), nil
+}
+
+// listTasks lists tasks
+func listTasks(name string) (err error) {
+	tasksFile, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+
+	defer tasksFile.Close()
+
+	content, err := io.ReadAll(tasksFile)
+	if err != nil {
+		return err
+	}
+
+	tasks := bytes.Split(content, []byte("\n"))
+	for _, task := range tasks {
+		fmt.Println(string(task))
+	}
+
+	return nil
 }
