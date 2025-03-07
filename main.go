@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/rand"
@@ -73,7 +74,8 @@ func main() {
 					id := c.Args().Slice()[1]
 					if id == "*" {
 						if err := os.Remove("tasks/" + c.Args().First() + ".txt"); err != nil {
-							return err
+							fmt.Printf("task %s removed\n", id)
+							return nil
 						}
 
 						fmt.Printf("tasks removed\n")
@@ -82,7 +84,8 @@ func main() {
 
 					tasksFile, err := os.Open("tasks/" + c.Args().First() + ".txt")
 					if err != nil {
-						return err
+						fmt.Printf("task %s removed\n", id)
+						return nil
 					}
 
 					content, err := io.ReadAll(tasksFile)
@@ -157,6 +160,113 @@ func main() {
 						fmt.Println("linsting complete")
 						return nil
 					}
+				},
+			},
+
+			{
+				Name:  "article",
+				Usage: "Creates article.",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					if c.Args().Len() < 1 {
+						return errors.New("must have article name")
+					}
+
+					id, err := generateId()
+					if err != nil {
+						return err
+					}
+
+					os.Mkdir("articles", os.ModeDir)
+					articleFile, err := os.OpenFile("articles/"+id+"_"+c.Args().First()+".txt", os.O_CREATE|os.O_APPEND, 0666)
+					if err != nil {
+						return err
+					}
+
+					defer articleFile.Close()
+
+					scanner := bufio.NewScanner(os.Stdin)
+					for scanner.Scan() {
+						articleFile.Write([]byte(scanner.Text() + "\n"))
+					}
+
+					if err := scanner.Err(); err != nil {
+						return err
+					}
+
+					fmt.Printf("article %s created\n", id)
+					return nil
+				},
+			},
+
+			{
+				Name:  "delete",
+				Usage: "Deletes article.",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					if c.Args().Len() < 1 {
+						return errors.New("must have article id")
+					}
+
+					items, err := os.ReadDir("articles")
+					if err != nil {
+						fmt.Printf("article %s deleted\n", c.Args().First())
+						return nil
+					}
+
+					for _, item := range items {
+						if strings.SplitN(item.Name(), "_", 2)[0] == c.Args().First() {
+							if err := os.Remove("articles/" + item.Name()); err != nil {
+								fmt.Printf("article %s deleted\n", c.Args().First())
+								return nil
+							}
+
+							fmt.Printf("article %s deleted\n", c.Args().First())
+							return nil
+						}
+					}
+
+					fmt.Printf("article %s deleted\n", c.Args().First())
+					return nil
+				},
+			},
+
+			{
+				Name:  "guide",
+				Usage: "Lists articles.",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					items, err := os.ReadDir("articles")
+					if err != nil {
+						fmt.Println("linsting complete")
+						return nil
+					}
+
+					if c.Args().Len() > 0 {
+						for _, item := range items {
+							if strings.SplitN(item.Name(), "_", 2)[0] == c.Args().First() {
+								articleFile, err := os.Open("articles/" + item.Name())
+								if err != nil {
+									return err
+								}
+
+								content, err := io.ReadAll(articleFile)
+								if err != nil {
+									return err
+								}
+
+								fmt.Print(string(content))
+								return nil
+							}
+						}
+					} else {
+						for _, item := range items {
+							keys := strings.SplitN(item.Name(), "_", 2)
+							fmt.Println(keys[0], strings.Split(keys[1], ".")[0])
+						}
+
+						fmt.Println()
+						fmt.Println("linsting complete")
+					}
+
+					return nil
 				},
 			},
 		},
