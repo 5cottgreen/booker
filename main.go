@@ -193,6 +193,7 @@ func main() {
 						return err
 					}
 
+					fmt.Println()
 					fmt.Printf("article %s created\n", id)
 					return nil
 				},
