@@ -184,16 +184,21 @@ func main() {
 
 					defer articleFile.Close()
 
+					fmt.Println("Enter article text, type /end to end input:")
 					scanner := bufio.NewScanner(os.Stdin)
 					for scanner.Scan() {
-						articleFile.Write([]byte(scanner.Text() + "\n"))
+						if scanner.Text() != "/end" {
+							articleFile.Write([]byte(scanner.Text() + "\n"))
+						} else {
+							fmt.Println()
+							break
+						}
 					}
 
 					if err := scanner.Err(); err != nil {
 						return err
 					}
 
-					fmt.Println()
 					fmt.Printf("article %s created\n", id)
 					return nil
 				},
