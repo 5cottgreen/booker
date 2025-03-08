@@ -20,7 +20,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "greet",
-				Usage: "Greets you.",
+				Usage: "Greets you.\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					fmt.Println("Hello friend!")
 					return nil
@@ -29,7 +29,7 @@ func main() {
 
 			{
 				Name:  "cheerup",
-				Usage: "Cheers you up.",
+				Usage: "Cheers you up.\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					fmt.Println("Never stop fighting!")
 					return nil
@@ -38,7 +38,7 @@ func main() {
 
 			{
 				Name:  "task",
-				Usage: "Creates task.",
+				Usage: "Creates task.\nExample: booker task <category name> <task description>\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if c.Args().Len() < 2 {
 						return errors.New("must have category name and task description")
@@ -65,7 +65,7 @@ func main() {
 
 			{
 				Name:  "done",
-				Usage: "Romoves task.",
+				Usage: "Romoves task.\nExample: booker done <category name> <task id>\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if c.Args().Len() < 2 {
 						return errors.New("must have category name and task id")
@@ -139,7 +139,7 @@ func main() {
 
 			{
 				Name:  "list",
-				Usage: "Lists tasks.",
+				Usage: "Lists tasks.\nExample: booker list <category name>\nExample: booker list\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if c.Args().Len() > 0 {
 						listTasks("tasks/" + c.Args().First() + ".txt")
@@ -165,7 +165,7 @@ func main() {
 
 			{
 				Name:  "article",
-				Usage: "Creates article.",
+				Usage: "Creates article.\nExample: booker article <article name>\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if c.Args().Len() < 1 {
 						return errors.New("must have article name")
@@ -206,7 +206,7 @@ func main() {
 
 			{
 				Name:  "delete",
-				Usage: "Deletes article.",
+				Usage: "Deletes article.\nExample: booker delete <id>\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if c.Args().Len() < 1 {
 						return errors.New("must have article id")
@@ -237,7 +237,7 @@ func main() {
 
 			{
 				Name:  "guide",
-				Usage: "Lists articles.",
+				Usage: "Lists articles.\nExample: booker guide <id>\nExample: booker guide\n",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					items, err := os.ReadDir("articles")
 					if err != nil {
